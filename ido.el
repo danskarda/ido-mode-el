@@ -3146,7 +3146,7 @@ for first matching file."
 	  (setq sofar (cons next sofar)))))
     ret))
 
-(defun ido-name (item)
+(defsubst ido-name (item)
   ;; Return file name for current item, whether in a normal list
   ;; or a merged work directory list.
   (if (consp item) (car item) item))
@@ -3812,9 +3812,18 @@ This is to make them appear as if they were \"virtual buffers\"."
           (if ido-enable-regexp
               subs
             (regexp-quote subs)))
-    (setq res (mapcar #'ido-word-matching-substring items))
-    (setq res (delq nil res)) ;; remove any nil elements (shouldn't happen)
-    (setq alist (mapcar #'ido-makealist res)) ;; could use an  OBARRAY
+    ;; (setq res (mapcar #'ido-word-matching-substring items))
+    ;; (setq res (delq nil res)) ;; remove any nil elements (shouldn't happen)
+    ;; (setq alist (mapcar #'ido-makealist res)) ;; could use an  OBARRAY
+
+    ;; optimalization: unroll, do let only once
+    ;; do not use mapcar + delq
+    (let ((case-fold-search ido-case-fold) m)
+      (dolist (word items)
+	(setq m (string-match ido-change-word-sub (ido-name word)))
+	(when m
+	  (push (cons (substring (ido-name word) m) 1)
+		alist))))
 
     ;; try-completion returns t if there is an exact match.
     (let* ((completion-ignore-case ido-case-fold)
