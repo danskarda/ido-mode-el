@@ -3702,29 +3702,27 @@ This is to make them appear as if they were \"virtual buffers\"."
 	 full-matches suffix-matches prefix-matches matches)
     (setq ido-incomplete-regexp nil)
     (condition-case error
-        (mapc
-         (lambda (item)
-           (let ((name (ido-name item)))
-	     (if (and (or non-prefix-dot
-			  (if (= (aref ido-text 0) ?.)
-			      (= (aref name 0) ?.)
-			    (/= (aref name 0) ?.)))
-		      (string-match re name))
-		 (cond
-		  ((and (eq ido-cur-item 'buffer)
-			(or (not (stringp ido-default-item))
-			    (not (string= name ido-default-item)))
-			(string= name (buffer-name ido-entry-buffer)))
-		   (setq matches (cons item matches)))
-		  ((and full-re (string-match full-re name))
-		   (setq full-matches (cons item full-matches)))
-		  ((and suffix-re (string-match suffix-re name))
-		   (setq suffix-matches (cons item suffix-matches)))
-		  ((and prefix-re (string-match prefix-re name))
-		   (setq prefix-matches (cons item prefix-matches)))
-		  (t (setq matches (cons item matches))))))
-	   t)
-         items)
+        (let (name)
+	  (dolist (item items)
+	    (setq name (ido-name item))
+	    (if (and (or non-prefix-dot
+			 (if (= (aref ido-text 0) ?.)
+			     (= (aref name 0) ?.)
+			   (/= (aref name 0) ?.)))
+		     (string-match re name))
+		(cond
+		 ((and (eq ido-cur-item 'buffer)
+		       (or (not (stringp ido-default-item))
+			   (not (string= name ido-default-item)))
+		       (string= name (buffer-name ido-entry-buffer)))
+		  (setq matches (cons item matches)))
+		 ((and full-re (string-match full-re name))
+		  (setq full-matches (cons item full-matches)))
+		 ((and suffix-re (string-match suffix-re name))
+		  (setq suffix-matches (cons item suffix-matches)))
+		 ((and prefix-re (string-match prefix-re name))
+		  (setq prefix-matches (cons item prefix-matches)))
+		 (t (setq matches (cons item matches)))))))
       (invalid-regexp
        (setq ido-incomplete-regexp t
              ;; Consider the invalid regexp message internally as a
@@ -3748,14 +3746,17 @@ This is to make them appear as if they were \"virtual buffers\"."
       (setq re (mapconcat #'regexp-quote (split-string ido-text "") ".*"))
       (if ido-enable-prefix
 	  (setq re (concat "\\`" re)))
-      (mapc
-       (lambda (item)
-	 (let ((name (ido-name item)))
-	   (if (string-match re name)
-	       (setq matches (cons item matches)))))
-       items))
-    matches))
 
+      ;; (mapc
+      ;;  (lambda (item)
+      ;; 	 (let ((name (ido-name item)))
+      ;; 	   (if (string-match re name)
+      ;; 	       (setq matches (cons item matches)))))
+      ;;  items)
+      (dolist (item items)
+	(when (string-match re (ido-name item))
+	    (push item matches))))
+    matches))
 
 (defun ido-set-matches ()
   ;; Set `ido-matches' to the list of items matching prompt
