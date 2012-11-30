@@ -1866,6 +1866,9 @@ If INITIAL is non-nil, it specifies the initial input string."
        (ido-enable-prefix ido-enable-prefix)
        (ido-enable-regexp ido-enable-regexp)
        (ido-show-confirm-message nil)
+       ;; ido-speed-hack caches
+       (ido-cache-cur-list nil)
+       (ido-cache-cur-list-reverse nil)
        )
 
     (ido-setup-completion-map)
@@ -3784,7 +3787,10 @@ This is to make them appear as if they were \"virtual buffers\"."
 (defun ido-set-matches ()
   ;; Set `ido-matches' to the list of items matching prompt
   (when ido-rescan
-    (setq ido-matches (ido-set-matches-1 (reverse ido-cur-list) (not ido-rotate))
+    (unless (eq ido-cur-list ido-cache-cur-list)
+      (setq ido-cache-cur-list ido-cur-list
+	    ido-cache-cur-list-reverse (reverse ido-cur-list)))
+    (setq ido-matches (ido-set-matches-1 ido-cache-cur-list-reverse (not ido-rotate))
 	  ido-rotate nil)))
 
 (defun ido-ignore-item-p (name re-list &optional ignore-ext)
